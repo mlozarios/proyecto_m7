@@ -181,7 +181,7 @@ with main:
 
     # --- Left Column: Location Filter + Top Jobs ---
     col3, col4 = st.columns(2, vertical_alignment='top', gap='large')
-
+    selected_location = None
     with col3:
         locations = sorted(df['location'].unique().tolist())
         default_idx = locations.index('santa cruz') if 'santa cruz' in locations else 0
@@ -208,21 +208,21 @@ with main:
 
     # --- Right Column: Location Frequency + Bernoulli Plot ---
     with col4:
+        st.header(f"Bernoulli Distribution Of {selected_location} Over Time")
+        df_bern_april = df[(df['date_published'] >= jan_start) & (df['date_published'] <= april_end)].copy()
+        df_bern_april['is_santa_cruz'] = df_bern_april['location'].apply(lambda x: 1 if x == selected_location else 0)
+        bernoulli = df_bern_april.groupby('date_published')['is_santa_cruz'].mean().reset_index(name='probability')
+        bernoulli.set_index('date_published', inplace=True)
+        st.subheader(f"Probability of {selected_location} Location Over Time")
+        st.line_chart(bernoulli)
+
+        st.divider()
+
         st.header("Histograma de trabajos por departamento")
         loc_freq = df['location'].value_counts().reset_index()
         loc_freq.columns = ['location', 'count']
         st.bar_chart(loc_freq, x='location', y='count')
-
-        st.divider()
-        st.header("Bernoulli Distribution Of Santa Cruz Over Time")
-        df_bern_april = df[(df['date_published'] >= jan_start) & (df['date_published'] <= april_end)].copy()
-
-        df_bern_april['is_santa_cruz'] = df_bern_april['location'].apply(lambda x: 1 if x == 'santa cruz' else 0)
-        bernoulli = df_bern_april.groupby('date_published')['is_santa_cruz'].mean().reset_index(name='probability')
-        bernoulli.set_index('date_published', inplace=True)
-
-        st.subheader("Probability of Santa Cruz Location Over Time")
-        st.line_chart(bernoulli)
+        
     
 st.markdown("###")
 _, col5, _ = st.columns([2,0.7, 2], vertical_alignment='center', gap='small')
